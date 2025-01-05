@@ -8,6 +8,11 @@ import { UsersModule } from './users/users.module';
 import { AuthGuard } from '../shared/guards/auth.guard';
 import { RolesGuard } from '../shared/guards/roles.guard';
 import { ConfigModule } from '@nestjs/config';
+import { CompaniesModule } from './companies/companies.module';
+import { CashDesksModule } from './cash-desks/cash-desks.module';
+import { CashiersModule } from './cashiers/cashiers.module';
+import { ClientsModule } from './clients/clients.module';
+import { TicketsModule } from './tickets/tickets.module';
 
 @Module({
   imports: [
@@ -17,6 +22,11 @@ import { ConfigModule } from '@nestjs/config';
     AuthModule,
     DbModule,
     UsersModule,
+    CompaniesModule,
+    CashDesksModule,
+    CashiersModule,
+    ClientsModule,
+    TicketsModule,
   ],
   controllers: [AppController],
   providers: [

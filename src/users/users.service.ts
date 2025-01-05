@@ -11,8 +11,8 @@ import {
 export class UsersService {
   constructor(private readonly dbService: DbService) {}
 
-  async create({ login, password, role }: CreateUserDto) {
-    return await this.dbService.queryItem<User>(
+  create({ login, password, role }: CreateUserDto) {
+    return this.dbService.queryItem<User>(
       `
       INSERT INTO users (login, password, role)
       VALUES ($1, $2, $3)
@@ -22,8 +22,8 @@ export class UsersService {
     );
   }
 
-  async findAll() {
-    return await this.dbService.query<User>(
+  findAll() {
+    return this.dbService.query<User>(
       `
       SELECT id, login, role 
       FROM users
@@ -31,8 +31,8 @@ export class UsersService {
     );
   }
 
-  async findById(id: number) {
-    return await this.dbService.queryItem<User>(
+  findById(id: number) {
+    return this.dbService.queryItem<User>(
       `
       SELECT u.id, u.login, u.role 
       FROM users u
@@ -42,8 +42,8 @@ export class UsersService {
     );
   }
 
-  async findByLogin(login: string) {
-    return await this.dbService.queryItem<User>(
+  findByLogin(login: string) {
+    return this.dbService.queryItem<User>(
       `
       SELECT u.id, u.login, u.role
       FROM users u
@@ -53,8 +53,8 @@ export class UsersService {
     );
   }
 
-  async findByCredits({ login, password }: UserCredits) {
-    return await this.dbService.queryItem<User>(
+  findByCredits({ login, password }: UserCredits) {
+    return this.dbService.queryItem<User>(
       `
       SELECT u.id, u.login, u.role 
       FROM users u
@@ -64,8 +64,8 @@ export class UsersService {
     );
   }
 
-  async update(id: number, { login, password, role }: UpdateUserDto) {
-    return await this.dbService.queryItem<User>(
+  update(id: number, { login, password, role }: UpdateUserDto) {
+    return this.dbService.queryItem<User>(
       `
       UPDATE users 
       SET login = $1, password = $2, role = $3,
@@ -76,8 +76,8 @@ export class UsersService {
     );
   }
 
-  async remove(id: number) {
-    return await this.dbService.queryItem(
+  remove(id: number) {
+    return this.dbService.queryItem(
       `
       DELETE FROM users
       WHERE id = $1
