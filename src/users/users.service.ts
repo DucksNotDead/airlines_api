@@ -42,6 +42,17 @@ export class UsersService {
     );
   }
 
+  async findByLogin(login: string) {
+    return await this.dbService.queryItem<User>(
+      `
+      SELECT u.id, u.login, u.role
+      FROM users u
+      WHERE u.login = $1
+      `,
+      [login],
+    );
+  }
+
   async findByCredits({ login, password }: UserCredits) {
     return await this.dbService.queryItem<User>(
       `

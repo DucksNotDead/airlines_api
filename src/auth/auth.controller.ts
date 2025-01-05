@@ -10,23 +10,31 @@ import {
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
-import { Roles } from '../../shared/decorators/roles.method';
-import { CreateUserDto, User, UserCredits } from '../../shared/entities/user';
+import { User, UserCredits } from '../../shared/entities/user';
 import { Public } from '../../shared/decorators/public.method';
 import { AUTH_TOKEN_KEY } from '../../shared/const';
 import { UserParam } from '../../shared/decorators/user.param';
+import { UserRole } from '../../shared/types';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly userService: UsersService,
+    private readonly usersService: UsersService,
   ) {}
 
-  @Roles('Admin')
+  @Public()
   @Post('register')
-  async register(@Body() dto: CreateUserDto, @Res() res: Response) {
-    const user = await this.userService.create(dto);
+  async register(@Body() credits: UserCredits, @Res() res: Response) {
+    const candidate = await this.usersService.findByLogin(credits.login);
+    if (candidate) {
+      throw new BadRequestException('User already exists');
+    }
+
+    const user = await this.usersService.create({
+      ...credits,
+      role: UserRole.Client,
+    });
     if (!user) {
       throw new BadRequestException();
     }
@@ -42,7 +50,7 @@ export class AuthController {
   @Public()
   @Post('login')
   async login(@Body() credits: UserCredits, @Res() res: Response) {
-    const user = await this.userService.findByCredits(credits);
+    const user = await this.usersService.findByCredits(credits);
     if (!user) {
       throw new BadRequestException();
     }

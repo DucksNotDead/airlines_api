@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -6,16 +7,28 @@ import {
   Get,
   Param,
   Patch,
+  Post,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Roles } from '../../shared/decorators/roles.method';
 import { UserParam } from '../../shared/decorators/user.param';
-import { UpdateUserDto, User } from '../../shared/entities/user';
+import { CreateUserDto, UpdateUserDto, User } from '../../shared/entities/user';
 import { UserRole } from '../../shared/types';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Roles('Admin')
+  @Post()
+  async create(@Body() dto: CreateUserDto) {
+    const candidate = await this.usersService.findByLogin(dto.login);
+    if (candidate) {
+      throw new BadRequestException('User already exists');
+    }
+
+    return await this.usersService.create(dto);
+  }
 
   @Roles('Admin')
   @Get()

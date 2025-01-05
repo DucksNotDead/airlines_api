@@ -7,12 +7,19 @@ import { DbModule } from './db/db.module';
 import { UsersModule } from './users/users.module';
 import { AuthGuard } from '../shared/guards/auth.guard';
 import { RolesGuard } from '../shared/guards/roles.guard';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [AuthModule, DbModule, UsersModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    AuthModule,
+    DbModule,
+    UsersModule,
+  ],
   controllers: [AppController],
   providers: [
-    AppService,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
@@ -21,6 +28,7 @@ import { RolesGuard } from '../shared/guards/roles.guard';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
+    AppService,
   ],
 })
 export class AppModule {}
