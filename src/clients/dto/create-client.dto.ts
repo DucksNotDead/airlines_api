@@ -9,5 +9,5 @@ export class CreateClientDto {
 
   @IsOptional()
   @IsNumber()
-  user_id: number;
+  user_id?: number;
 }

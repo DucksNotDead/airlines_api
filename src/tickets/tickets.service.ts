@@ -1,27 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { CreateTicketDto } from './dto/create-ticket.dto';
-import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { DbService } from '../db/db.service';
 import { TTicketStatus } from '../../shared/types';
+import { UpdateTicketDto } from './dto/update-ticket-dto';
 
 @Injectable()
 export class TicketsService {
   constructor(private readonly dbService: DbService) {}
 
-  create({
-    buy_date,
-    type_id,
-    company_code,
-    cashier_id,
-    cash_desk_id,
-  }: CreateTicketDto) {
+  create({ type_id, company_code }: CreateTicketDto) {
     return this.dbService.queryItem(
       `
-      INSERT INTO tickets (buy_date,type_id,company_code,cashier_id,cash_desk_id)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO tickets (type_id, company_code, status_id)
+      VALUES ($1, $2, 1)
       RETURNING *
       `,
-      [buy_date, type_id, company_code, cashier_id, cash_desk_id],
+      [type_id, company_code],
     );
   }
 
@@ -73,40 +67,38 @@ export class TicketsService {
         WHERE cpn.ticket_id = t.id
         LIMIT 1
     ) as client
-FROM tickets t`;
+FROM tickets t
+WHERE 1 = 1`;
     const params: any[] = [];
 
     if (clientId) {
-      query += ' WHERE client.id = $1';
+      query += ' AND client.id = $1';
       params.push(clientId);
     }
 
     if (status) {
-      query += ' WHERE status.code = $1';
+      query += ' AND status.code = $1';
       params.push(status);
     }
 
     return this.dbService.query(query, params);
   }
 
-  update(
-    id: number,
-    {
-      buy_date,
-      type_id,
-      company_code,
-      cashier_id,
-      cash_desk_id,
-    }: UpdateTicketDto,
-  ) {
+  findById(id: number) {
+    return this.dbService.queryItem(`SELECT * FROM tickets WHERE id = $1`, [
+      id,
+    ]);
+  }
+
+  update(id: number, { type_id, company_code }: UpdateTicketDto) {
     return this.dbService.queryItem(
       `
       UPDATE tickets 
-      SET buy_date = $1, type_id = $2, company_code = $3, cashier_id = $4, cash_desk_id = $5
-      WHERE id = $6
+      SET type_id = $1, company_code = $2
+      WHERE id = $3
       RETURNING *
       `,
-      [buy_date, type_id, company_code, cashier_id, cash_desk_id],
+      [type_id, company_code, id],
     );
   }
 
@@ -119,5 +111,63 @@ FROM tickets t`;
       `,
       [id],
     );
+  }
+
+  buy(id: number, clientId: number) {
+    return this.dbService.queryItem(
+      `
+      BEGIN;
+      
+      UPDATE tickets
+      SET status_id = 2
+      WHERE id = $2;
+      
+      UPDATE coupons
+      SET client_id = $1
+      WHERE ticket_id = $2;
+      
+      COMMIT:
+      `,
+      [clientId, id],
+    );
+  }
+
+  confirm(id: number) {
+    return this.dbService.queryItem(
+      `
+      UPDATE tickets
+      SET status_id = 3
+      WHERE id = $1
+      RETURNING *
+      `,
+      [id],
+    );
+  }
+
+  deny(id: number) {
+    return this.dbService.queryItem(
+      `
+      BEGIN;
+      
+      UPDATE tickets
+      SET status_id = 1
+      WHERE id = $1;
+      
+      UPDATE coupons
+      SET client_id = null
+      WHERE ticket_id = $1;
+      
+      COMMIT;      
+      `,
+      [id],
+    );
+  }
+
+  getTypes() {
+    return this.dbService.query('SELECT * FROM ticket_types');
+  }
+
+  getStatuses() {
+    return this.dbService.query('SELECT * FROM ticket_statuses');
   }
 }
