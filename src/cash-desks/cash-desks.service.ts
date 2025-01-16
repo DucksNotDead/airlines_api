@@ -9,7 +9,7 @@ export class CashDesksService {
   create({ address }: CashDeskDto) {
     return this.dbService.queryItem(
       `
-      INSERT INTO companies (address)
+      INSERT INTO cash_desks (address)
       VALUES ($1)
       RETURNING *
       `,
@@ -37,7 +37,7 @@ export class CashDesksService {
     return this.dbService.queryItem(
       `
       DELETE FROM cash_desks
-      WHERE id = $2
+      WHERE id = $1
       RETURNING id
       `,
       [id],

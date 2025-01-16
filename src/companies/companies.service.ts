@@ -37,7 +37,7 @@ export class CompaniesService {
       `
       DELETE FROM companies
       WHERE code = $1
-      RETURNING id`,
+      RETURNING code`,
       [code],
     );
   }

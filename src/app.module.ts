@@ -14,6 +14,7 @@ import { CashiersModule } from './cashiers/cashiers.module';
 import { ClientsModule } from './clients/clients.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { CouponsModule } from './coupons/coupons.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { CouponsModule } from './coupons/coupons.module';
     ClientsModule,
     TicketsModule,
     CouponsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [

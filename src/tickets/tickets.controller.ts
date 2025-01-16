@@ -32,22 +32,27 @@ export class TicketsController {
 
   @Roles('Admin', 'Employee')
   @Post()
-  create(@Body() createTicketDto: CreateTicketDto) {
-    return this.ticketsService.create(createTicketDto);
+  async create(@Body() createTicketDto: CreateTicketDto) {
+    const ticket = await this.ticketsService.create(createTicketDto);
+    if (ticket) {
+      return { message: 'Ticket was created' };
+    }
   }
 
+  @Public()
   @Get()
   findAll(
     @Query('status') status: TTicketStatus,
     @Query('mine') mine: string,
-    @UserParam() { role: userRole, id: userId }: User,
+    @UserParam() user: User,
   ) {
-    const isClient = userRole === UserRole.Client;
+
+    const isClient = user?.role === UserRole.Client;
     const isMine = Boolean(mine) && isClient;
 
     return this.ticketsService.findAll(
       !(isMine && status === 'for_sale') ? status : undefined,
-      isMine && userId,
+      isMine && user?.id,
     );
   }
 
@@ -65,7 +70,9 @@ export class TicketsController {
       throw new BadRequestException('Ticket not for sale');
     }
 
-    return this.ticketsService.update(+id, updateTicketDto);
+    await this.ticketsService.update(+id, updateTicketDto);
+
+    return { message: "Ticket was updated" }
   }
 
   @Roles('Admin', 'Employee')
@@ -78,15 +85,15 @@ export class TicketsController {
   @Post('buy/:id')
   async buy(
     @Param('id') id: string,
-    @Body() { passport, fio, email }: BuyTicketDto,
+    @Body() dto: BuyTicketDto,
     @UserParam() user: User,
   ) {
     let clientAccount = user.role === UserRole.Client && user;
     let isAccountCreated = false;
     const createAccount = async () => {
       clientAccount = await this.usersService.create({
-        login: email,
-        password: String(passport),
+        login: dto.email,
+        password: String(dto.passport),
         role: UserRole.Client,
       });
       isAccountCreated = true;
@@ -100,15 +107,15 @@ export class TicketsController {
       throw new BadRequestException('Ticket is not for sale');
     }
 
-    let client: Client = await this.clientsService.findByPassport(+passport);
+    let client: Client = await this.clientsService.findByPassport(dto.passport);
     if (!client) {
       if (!clientAccount) {
         await createAccount();
       }
 
       client = await this.clientsService.create({
-        passport: +passport,
-        fio,
+        passport: dto.passport,
+        fio: dto.fio,
         user_id: clientAccount.id,
       });
     }
@@ -119,7 +126,7 @@ export class TicketsController {
 
     await this.ticketsService.buy(+id, client.id);
 
-    return { isAccountCreated };
+    return { isAccountCreated, client };
   }
 
   @Roles('Admin', 'Cashier')

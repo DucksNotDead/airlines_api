@@ -15,10 +15,6 @@ export class User {
   role: UserRole;
 }
 
-export class FullUser extends User {
-  password: string;
-}
-
 export class CreateUserDto {
   @IsString()
   login: string;
@@ -34,10 +30,6 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   login: string;
-
-  @IsOptional()
-  @IsString()
-  password: string;
 
   @IsOptional()
   @IsEnum(UserRole)

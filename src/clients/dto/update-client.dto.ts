@@ -2,8 +2,8 @@ import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateClientDto {
   @IsOptional()
-  @IsNumber()
-  passport: number;
+  @IsString()
+  passport: string;
 
   @IsOptional()
   @IsString()

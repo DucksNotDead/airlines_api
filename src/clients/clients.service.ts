@@ -23,7 +23,7 @@ export class ClientsService {
     return this.dbService.query('SELECT * FROM clients');
   }
 
-  findByPassport(passport: number) {
+  findByPassport(passport: string) {
     return this.dbService.queryItem<Client>(
       `
       SELECT *

@@ -64,15 +64,15 @@ export class UsersService {
     );
   }
 
-  update(id: number, { login, password, role }: UpdateUserDto) {
+  update(id: number, { login, role }: UpdateUserDto) {
     return this.dbService.queryItem<User>(
       `
       UPDATE users 
-      SET login = $1, password = $2, role = $3,
-      WHERE id = $4
+      SET login = $1, role = $2
+      WHERE id = $3
       RETURNING id, login, role
       `,
-      [login, password, role, id],
+      [login, role, id],
     );
   }
 

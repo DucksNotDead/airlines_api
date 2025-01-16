@@ -12,7 +12,7 @@ import {
 import { UsersService } from './users.service';
 import { Roles } from '../../shared/decorators/roles.method';
 import { UserParam } from '../../shared/decorators/user.param';
-import { CreateUserDto, UpdateUserDto, User } from '../../shared/entities/user';
+import {CreateUserDto, UpdateUserDto, User} from '../../shared/entities/user';
 import { UserRole } from '../../shared/types';
 
 @Controller('users')

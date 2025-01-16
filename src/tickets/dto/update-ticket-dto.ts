@@ -1,4 +1,5 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import {IsArray, IsNumber, IsOptional, IsString} from 'class-validator';
+import {CouponDto} from "../../../shared/entities/coupon";
 
 export class UpdateTicketDto {
   @IsOptional()
@@ -8,4 +9,8 @@ export class UpdateTicketDto {
   @IsOptional()
   @IsString()
   company_code: string;
+
+  @IsOptional()
+  @IsArray()
+  coupons: CouponDto[];
 }
