@@ -4,6 +4,9 @@ import { Roles } from '../../shared/decorators/roles.method';
 import { TicketsByCompanyAndMonthDto } from './dto/tickets-by-company-and-month.dto';
 import { CompaniesService } from '../companies/companies.service';
 import { TicketsByCompanyAndMonthResponse } from './responses/tickets-by-company-and-month.response';
+import { TotalAmountOfEachCompanyResponse } from './responses/total-amount-of-each-company.response';
+import { ClientsOfEachCompanyByDateResponse } from './responses/clients-of-each-company-by-date.response';
+import { ClientsOfEachCompanyByDateDto } from './dto/clients-of-each-company-by-date.dto';
 
 @Controller('reports')
 export class ReportsController {
@@ -28,5 +31,22 @@ export class ReportsController {
     const tickets = await this.reportsService.ticketsByCompanyAndMonth(dto);
 
     return { company_name, tickets };
+  }
+
+  @Roles('Admin')
+  @Post('/total-amount-of-each-company')
+  async totalAmountOfEachCompany(): Promise<TotalAmountOfEachCompanyResponse> {
+    const companies = await this.reportsService.totalAmountOfEachCompany();
+    return { companies };
+  }
+
+  @Roles('Admin')
+  @Post('/clients-of-each-company-by-date')
+  async clientsOfEachCompanyByDate(
+    @Body() { date }: ClientsOfEachCompanyByDateDto,
+  ): Promise<ClientsOfEachCompanyByDateResponse> {
+    const companies =
+      await this.reportsService.clientsOfEachCompanyByDate(date);
+    return { companies };
   }
 }

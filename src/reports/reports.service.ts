@@ -1,18 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { DbService } from '../db/db.service';
-import { PdfService } from './pdf.service';
 import { TicketsByCompanyAndMonthDto } from './dto/tickets-by-company-and-month.dto';
-import {
-  TicketByCompanyAndMonth,
-  TicketsByCompanyAndMonthResponse,
-} from './responses/tickets-by-company-and-month.response';
+import { TicketByCompanyAndMonth } from './responses/tickets-by-company-and-month.response';
+import { CompanyWithSumRate } from './responses/total-amount-of-each-company.response';
+import { CompanyWithClients } from './responses/clients-of-each-company-by-date.response';
 
 @Injectable()
 export class ReportsService {
-  constructor(
-    private readonly dbService: DbService,
-    private readonly pdfService: PdfService,
-  ) {}
+  constructor(private readonly dbService: DbService) {}
 
   ticketsByCompanyAndMonth({
     company_code,
@@ -61,12 +56,12 @@ export class ReportsService {
       FROM tickets t
       WHERE t.company_code = $1 AND t.buy_date ILIKE '%.' || lpad($2::TEXT, 2, '0') || '.' || $3::TEXT
       `,
-      [company_code, month, year]
+      [company_code, month, year],
     );
   }
 
-  private totalAmountOfEachCompany() {
-    return this.dbService.query(
+  totalAmountOfEachCompany() {
+    return this.dbService.query<CompanyWithSumRate>(
       `
       SELECT c.*, coalesce((
           SELECT sum(cpn.rate)
@@ -79,8 +74,8 @@ export class ReportsService {
     );
   }
 
-  private clientsOfEachCompanyByDate(day: number, month: number, year: number) {
-    return this.dbService.query(
+  clientsOfEachCompanyByDate(date: string) {
+    return this.dbService.query<CompanyWithClients>(
       `
       SELECT c.*, coalesce((
           SELECT json_agg((
@@ -99,7 +94,7 @@ export class ReportsService {
       ), '[]') AS clients
       FROM companies c
       `,
-      [`${day}.${month}.${year}`],
+      [date],
     );
   }
 
