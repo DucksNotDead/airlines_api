@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { PdfService } from './pdf.service';
 import { TicketsByCompanyAndMonthDto } from './dto/tickets-by-company-and-month.dto';
-import { TicketsByCompanyAndMonthResponse } from './responses/tickets-by-company-and-month.response';
+import {
+  TicketByCompanyAndMonth,
+  TicketsByCompanyAndMonthResponse,
+} from './responses/tickets-by-company-and-month.response';
 
 @Injectable()
 export class ReportsService {
@@ -11,12 +14,12 @@ export class ReportsService {
     private readonly pdfService: PdfService,
   ) {}
 
-  private ticketsByCompanyAndMonth({
+  ticketsByCompanyAndMonth({
     company_code,
     month,
     year,
   }: TicketsByCompanyAndMonthDto) {
-    return this.dbService.query<TicketsByCompanyAndMonthResponse>(
+    return this.dbService.query<TicketByCompanyAndMonth>(
       `
       SELECT t.id, t.buy_date, (
           SELECT row_to_json(tt)
@@ -58,7 +61,7 @@ export class ReportsService {
       FROM tickets t
       WHERE t.company_code = $1 AND t.buy_date ILIKE '%.' || lpad($2::TEXT, 2, '0') || '.' || $3::TEXT
       `,
-      [company_code, month, year],
+      [company_code, month, year]
     );
   }
 
@@ -100,57 +103,57 @@ export class ReportsService {
     );
   }
 
-  async ticketsByCompanyAndMonthPDF(dto: TicketsByCompanyAndMonthDto) {
-    const data = await this.ticketsByCompanyAndMonth(dto);
-
-    return this.pdfService.genPdfFromData(
-      `Билеты, проданные ${dto.company_code} за ${dto.month}.${dto.year}`,
-      data,
-      {
-        id: 'ID',
-        buy_date: 'Дата покупки',
-        type: [
-          'Тип билета',
-          {
-            id: 'ID',
-            code: 'Код',
-            localized: 'Название',
-          },
-        ],
-        client: [
-          'Клиент',
-          {
-            id: 'ID',
-            fio: 'ФИО',
-            passport: 'Паспорт',
-          },
-        ],
-        cash_desk: [
-          'Касса',
-          {
-            id: 'ID',
-            address: 'Адрес',
-          },
-        ],
-        cashier: [
-          'Кассир',
-          {
-            id: 'ID',
-            fio: 'ФИО',
-            user_id: 'ID Пользователя',
-          },
-        ],
-        coupons: [
-          'Купоны',
-          {
-            id: 'ID',
-            index: 'Порядковый номер',
-            from: 'Откуда',
-            to: 'Куда',
-            rate: 'Стоимость',
-          },
-        ],
-      },
-    );
-  }
+  // async ticketsByCompanyAndMonthPDF(dto: TicketsByCompanyAndMonthDto) {
+  //   const data = await this.ticketsByCompanyAndMonth(dto);
+  //
+  //   return this.pdfService.genPdfFromData(
+  //     `Билеты, проданные ${dto.company_code} за ${dto.month}.${dto.year}`,
+  //     data,
+  //     {
+  //       id: 'ID',
+  //       buy_date: 'Дата покупки',
+  //       type: [
+  //         'Тип билета',
+  //         {
+  //           id: 'ID',
+  //           code: 'Код',
+  //           localized: 'Название',
+  //         },
+  //       ],
+  //       client: [
+  //         'Клиент',
+  //         {
+  //           id: 'ID',
+  //           fio: 'ФИО',
+  //           passport: 'Паспорт',
+  //         },
+  //       ],
+  //       cash_desk: [
+  //         'Касса',
+  //         {
+  //           id: 'ID',
+  //           address: 'Адрес',
+  //         },
+  //       ],
+  //       cashier: [
+  //         'Кассир',
+  //         {
+  //           id: 'ID',
+  //           fio: 'ФИО',
+  //           user_id: 'ID Пользователя',
+  //         },
+  //       ],
+  //       coupons: [
+  //         'Купоны',
+  //         {
+  //           id: 'ID',
+  //           index: 'Порядковый номер',
+  //           from: 'Откуда',
+  //           to: 'Куда',
+  //           rate: 'Стоимость',
+  //         },
+  //       ],
+  //     },
+  //   );
+  // }
 }

@@ -21,6 +21,10 @@ export class CompaniesService {
     return this.dbService.query('SELECT * FROM companies');
   }
 
+  async findNameByCode(code: string) {
+    return (await this.dbService.queryItem<{ name: string }>('SELECT name FROM companies WHERE code = $1', [code])).name;
+  }
+
   update(code: string, { name, address }: UpdateCompanyDto) {
     return this.dbService.queryItem(
       `

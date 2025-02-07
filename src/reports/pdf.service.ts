@@ -1,5 +1,5 @@
-import { PdfDocument } from '@ironsoftware/ironpdf/src/public/pdfDocument';
 import { Injectable } from '@nestjs/common';
+import { generatePdf } from 'html-pdf-node';
 
 type TPropertyLabel = string | [string, string];
 
@@ -38,7 +38,7 @@ export class PdfService {
               color: #333;
           }
           main {
-              width: 920px;
+              width: 100%;
               padding: 12px 24px;
           }
           .__separator {
@@ -158,6 +158,16 @@ export class PdfService {
     return html;
   }
 
+  private arrayBufferToBase64(buffer: ArrayBufferLike) {
+    let binary = '';
+    let bytes = new Uint8Array(buffer);
+    let len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
   async genPdfFromData<T>(
     title: string,
     data: T[],
@@ -171,7 +181,7 @@ export class PdfService {
         this.recursiveParser(data[index], scheme) +
         (Number(index) < data.length - 1 ? this.separator() : '');
 
-    const html = `
+    const content = `
 				${this.styles(styles)}
 				<main>
 					<h1>${title}</h1>
@@ -179,8 +189,12 @@ export class PdfService {
 				</main>
 		`;
 
-    const page = await PdfDocument.fromHtml(html);
+    const file = await new Promise<string>((resolve) => {
+      generatePdf({ content }, { width: 720 }, (_, buffer) => {
+        resolve(this.arrayBufferToBase64(buffer));
+      });
+    });
 
-    return page.saveAsBuffer();
+    return { file };
   }
 }

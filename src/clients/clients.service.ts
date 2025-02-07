@@ -23,6 +23,16 @@ export class ClientsService {
     return this.dbService.query('SELECT * FROM clients');
   }
 
+  findByUserId(user_id: number) {
+    return this.dbService.queryItem<Client>(
+      `
+      SELECT *
+      FROM clients WHERE user_id = $1
+      `,
+      [user_id],
+    );
+  }
+
   findByPassport(passport: string) {
     return this.dbService.queryItem<Client>(
       `

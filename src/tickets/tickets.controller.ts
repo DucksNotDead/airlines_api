@@ -21,6 +21,7 @@ import { ClientsService } from '../clients/clients.service';
 import { UsersService } from '../users/users.service';
 import { Client } from '../../shared/entities/client';
 import { UpdateTicketDto } from './dto/update-ticket-dto';
+import { CashiersService } from '../cashiers/cashiers.service';
 
 @Controller('tickets')
 export class TicketsController {
@@ -28,6 +29,7 @@ export class TicketsController {
     private readonly ticketsService: TicketsService,
     private readonly clientsService: ClientsService,
     private readonly usersService: UsersService,
+    private readonly cashiersService: CashiersService,
   ) {}
 
   @Roles('Admin', 'Employee')
@@ -41,19 +43,17 @@ export class TicketsController {
 
   @Public()
   @Get()
-  findAll(
+  async findAll(
     @Query('status') status: TTicketStatus,
-    @Query('mine') mine: string,
     @UserParam() user: User,
   ) {
+    const clientId: undefined | number | null = user
+      ? user.role === UserRole.Client
+        ? ((await this.clientsService.findByUserId(user.id))?.id ?? null)
+        : undefined
+      : null;
 
-    const isClient = user?.role === UserRole.Client;
-    const isMine = Boolean(mine) && isClient;
-
-    return this.ticketsService.findAll(
-      !(isMine && status === 'for_sale') ? status : undefined,
-      isMine && user?.id,
-    );
+    return this.ticketsService.findAll(status, clientId);
   }
 
   @Roles('Admin', 'Employee')
@@ -72,7 +72,7 @@ export class TicketsController {
 
     await this.ticketsService.update(+id, updateTicketDto);
 
-    return { message: "Ticket was updated" }
+    return { message: 'Ticket was updated' };
   }
 
   @Roles('Admin', 'Employee')
@@ -88,7 +88,7 @@ export class TicketsController {
     @Body() dto: BuyTicketDto,
     @UserParam() user: User,
   ) {
-    let clientAccount = user.role === UserRole.Client && user;
+    let clientAccount = user?.role === UserRole.Client && user;
     let isAccountCreated = false;
     const createAccount = async () => {
       clientAccount = await this.usersService.create({
@@ -126,12 +126,18 @@ export class TicketsController {
 
     await this.ticketsService.buy(+id, client.id);
 
+    client.passport = Number(client.passport);
+
     return { isAccountCreated, client };
   }
 
   @Roles('Admin', 'Cashier')
   @Post('confirm/:id')
-  async confirm(@Param('id') id: string) {
+  async confirm(
+    @Param('id') id: string,
+    @UserParam() { id: userId }: User,
+    @Body() { cash_desk_id }: { cash_desk_id: number },
+  ) {
     const ticket = await this.ticketsService.findById(+id);
     if (!ticket) {
       throw new BadRequestException('Ticket not found');
@@ -139,8 +145,14 @@ export class TicketsController {
     if ((ticket as any).status_id !== 2) {
       throw new BadRequestException('Ticket not under control');
     }
+    const cashier = await this.cashiersService.findByUserId(userId);
+    if (!cashier) {
+      throw new BadRequestException('Cashier not found');
+    }
 
-    return this.ticketsService.confirm(+id);
+    await this.ticketsService.confirm(+id, cashier.id, cash_desk_id);
+
+    return { message: 'Confirmed' };
   }
 
   @Roles('Admin', 'Cashier')
@@ -154,7 +166,9 @@ export class TicketsController {
       throw new BadRequestException('Ticket not under control');
     }
 
-    return this.ticketsService.deny(+id);
+    await this.ticketsService.deny(+id);
+
+    return { message: 'Denied' };
   }
 
   @Public()

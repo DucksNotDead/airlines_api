@@ -23,9 +23,10 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async query<T>(text: string, params?: any[]): Promise<T[]> {
+  async query<T>(text: string, params?: any[], log: boolean = false): Promise<T[]> {
     try {
       const res = await this.client.query(text, params);
+      if (log) console.log(text);
       return res.rows;
     } catch (error) {
       console.error('Database query error', error);

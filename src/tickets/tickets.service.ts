@@ -36,7 +36,7 @@ export class TicketsService {
     return ticket;
   }
 
-  findAll(status?: TTicketStatus, clientId?: number) {
+  findAll(status?: TTicketStatus, clientId?: number | null) {
     let query = `SELECT
     t.id, t.buy_date,
     (
@@ -88,13 +88,13 @@ LEFT JOIN LATERAL (
 WHERE 1 = 1`;
     const params: any[] = [];
 
-    if (clientId) {
-      query += ' AND client.id = $1';
+    if (clientId !== undefined) {
+      query += ' AND (status.id = 1 OR client.id = $1)';
       params.push(clientId);
     }
 
     if (status) {
-      query += ' AND status.code = $1';
+      query += ' AND status.code = $2';
       params.push(status);
     }
 
@@ -151,54 +151,60 @@ WHERE 1 = 1`;
     );
   }
 
-  buy(id: number, clientId: number) {
-    return this.dbService.queryItem(
-      `
-      BEGIN;
-      
-      UPDATE tickets
-      SET status_id = 2
-      WHERE id = $2;
-      
-      UPDATE coupons
-      SET client_id = $1
-      WHERE ticket_id = $2;
-      
-      COMMIT:
-      `,
-      [clientId, id],
-    );
+  async buy(id: number, clientId: number) {
+    try {
+      await this.dbService.query('BEGIN;');
+      await this.dbService.query(
+        `UPDATE tickets SET status_id = 2 WHERE id = $1;`,
+        [id],
+      );
+      await this.dbService.query(
+        `UPDATE coupons SET client_id = $1 WHERE ticket_id = $2;`,
+        [clientId, id],
+      );
+      await this.dbService.query('COMMIT;');
+    } catch (err) {
+      await this.dbService.query('ROLLBACK;');
+      throw err;
+    }
   }
 
-  confirm(id: number) {
+  confirm(id: number, cashierId: number, cashDeskId: number) {
+    const today = new Date();
+
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // Месяцы начинаются с 0
+    const year = today.getFullYear();
+
+    const formattedDate = `${day}.${month}.${year}`;
+
     return this.dbService.queryItem(
       `
       UPDATE tickets
-      SET status_id = 3
+      SET status_id = 3, buy_date = $2, cashier_id = $3, cash_desk_id = $4
       WHERE id = $1
       RETURNING *
       `,
-      [id],
+      [id, formattedDate, cashierId, cashDeskId],
     );
   }
 
-  deny(id: number) {
-    return this.dbService.queryItem(
-      `
-      BEGIN;
-      
-      UPDATE tickets
-      SET status_id = 1
-      WHERE id = $1;
-      
-      UPDATE coupons
-      SET client_id = null
-      WHERE ticket_id = $1;
-      
-      COMMIT;      
-      `,
-      [id],
-    );
+  async deny(id: number) {
+    try {
+      await this.dbService.queryItem('BEGIN;');
+      await this.dbService.queryItem(
+        `UPDATE tickets SET status_id = 1 WHERE id = $1;`,
+        [id],
+      );
+      await this.dbService.queryItem(
+        `UPDATE coupons SET client_id = null WHERE ticket_id = $1;`,
+        [id],
+      );
+      await this.dbService.queryItem('COMMIT;');
+    } catch (err) {
+      await this.dbService.queryItem('ROLLBACK;');
+      throw err;
+    }
   }
 
   getTypes() {

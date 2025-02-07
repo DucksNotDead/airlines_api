@@ -5,5 +5,6 @@ import { CashiersController } from './cashiers.controller';
 @Module({
   controllers: [CashiersController],
   providers: [CashiersService],
+  exports: [CashiersService],
 })
 export class CashiersModule {}

@@ -22,35 +22,22 @@ export class AuthGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    if (isPublic) {
-      return true;
+    try {
+      const request: Request = context.switchToHttp().getRequest();
+      const token = request.cookies[AUTH_TOKEN_KEY];
+      const userId = this.authService.getUserIdFromToken(token);
+      return new Promise((resolve) => {
+        this.usersService
+          .findById(userId)
+          .then((user) => {
+            request[USER_KEY] = user;
+
+            resolve(true);
+          })
+          .catch(() => resolve(isPublic));
+      });
+    } catch {
+      return isPublic;
     }
-
-    const request: Request = context.switchToHttp().getRequest();
-
-    const token = request.cookies[AUTH_TOKEN_KEY];
-    if (!token) {
-      return false;
-    }
-
-    const userId = this.authService.getUserIdFromToken(token);
-    if (!userId) {
-      return false;
-    }
-
-    return new Promise((resolve) => {
-      this.usersService
-        .findById(userId)
-        .then((user) => {
-          if (!user) {
-            return false;
-          }
-
-          request[USER_KEY] = user;
-
-          resolve(true);
-        })
-        .catch(() => resolve(false));
-    });
   }
 }

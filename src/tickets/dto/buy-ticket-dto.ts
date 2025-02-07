@@ -1,14 +1,13 @@
 import {IsEmail, IsNumber, IsOptional, IsString, Length} from 'class-validator';
 
 export class BuyTicketDto {
-	@IsOptional()
-  @IsEmail()
+  @IsString()
   email: string;
 
 	@IsString()
 	fio: string;
 
-  @IsNumber()
+  @IsString()
   @Length(10, 10)
   passport: string;
 }

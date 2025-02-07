@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateCashierDto } from './dto/create-cashier.dto';
 import { UpdateCashierDto } from './dto/update-cashier.dto';
 import { DbService } from '../db/db.service';
+import { Cashier } from '../../shared/entities/cashier';
 
 @Injectable()
 export class CashiersService {
@@ -20,6 +21,13 @@ export class CashiersService {
 
   findAll() {
     return this.dbService.query('SELECT * FROM cashiers');
+  }
+
+  findByUserId(user_id: number) {
+    return this.dbService.queryItem<Cashier>(
+      'SELECT * FROM cashiers WHERE user_id = $1',
+      [user_id],
+    );
   }
 
   update(id: number, { user_id, fio }: UpdateCashierDto) {

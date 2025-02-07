@@ -10,6 +10,7 @@ import {
 import { CashDesksService } from './cash-desks.service';
 import { CashDeskDto } from './dto/cash-desk.dto';
 import { Roles } from '../../shared/decorators/roles.method';
+import { Public } from '../../shared/decorators/public.method';
 
 @Controller('cash-desks')
 export class CashDesksController {
@@ -21,7 +22,7 @@ export class CashDesksController {
     return this.cashDesksService.create(createCashDeskDto);
   }
 
-  @Roles('Admin')
+  @Public()
   @Get()
   findAll() {
     return this.cashDesksService.findAll();
