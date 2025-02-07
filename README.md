@@ -32,6 +32,20 @@
 $ npm install
 ```
 
+## .env
+
+```
+APP_PORT=8000
+APP_SECRET=app_secret_key
+APP_TOKEN_LIFE=24h
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=airlines
+DB_USER=postgres
+DB_PASSWORD=postgres
+```
+
 ## Compile and run the project
 
 ```bash
@@ -45,31 +59,7 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-## Run tests
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
 ## Resources
 
